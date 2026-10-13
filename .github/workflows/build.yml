@@ -25,12 +25,20 @@ jobs:
 
       - name: Build (normal)
         run: |
-          cmake -S . -B build-normal -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico
+          cmake -S . -B build-normal \
+            -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico -DPICO_PLATFORM=rp2040 \
+            -DCMAKE_C_FLAGS="-mcpu=cortex-m0plus -mthumb" \
+            -DCMAKE_CXX_FLAGS="-mcpu=cortex-m0plus -mthumb" \
+            -DCMAKE_ASM_FLAGS="-mcpu=cortex-m0plus -mthumb"
           cmake --build build-normal -j4
 
       - name: Build (selftest)
         run: |
-          cmake -S . -B build-selftest -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico -DCMAKE_C_FLAGS="-DLCD_SELFTEST"
+          cmake -S . -B build-selftest \
+            -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico -DPICO_PLATFORM=rp2040 \
+            -DCMAKE_C_FLAGS="-mcpu=cortex-m0plus -mthumb -DLCD_SELFTEST" \
+            -DCMAKE_CXX_FLAGS="-mcpu=cortex-m0plus -mthumb" \
+            -DCMAKE_ASM_FLAGS="-mcpu=cortex-m0plus -mthumb"
           cmake --build build-selftest -j4
 
       - name: Collect
