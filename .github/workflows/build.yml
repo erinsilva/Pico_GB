@@ -1,0 +1,45 @@
+name: Build firmware
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Pico-GB-ILI9341
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential python3
+
+      - name: Get Pico SDK
+        run: |
+          git clone --depth 1 --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git $HOME/pico-sdk
+          git -C $HOME/pico-sdk submodule update --init --depth 1
+
+      - name: Build (normal)
+        run: |
+          cmake -S . -B build-normal -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico
+          cmake --build build-normal -j4
+
+      - name: Build (selftest)
+        run: |
+          cmake -S . -B build-selftest -DPICO_SDK_PATH=$HOME/pico-sdk -DPICO_BOARD=pico -DCMAKE_C_FLAGS="-DLCD_SELFTEST"
+          cmake --build build-selftest -j4
+
+      - name: Collect
+        run: |
+          mkdir out
+          cp build-normal/RP2040_GB.uf2 out/RP2040_GB_ILI9341.uf2
+          cp build-selftest/RP2040_GB.uf2 out/RP2040_GB_ILI9341_SELFTEST.uf2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: Pico-GB-ILI9341/out/*.uf2
